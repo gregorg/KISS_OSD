@@ -137,8 +137,10 @@ void setup(){
 
 static int16_t  throttle = 0;
 static uint16_t current = 0;
+static uint16_t armed = 0;
 static uint16_t LipoVoltage = 0;
 static uint16_t LipoMAH = 0;
+static uint16_t MaxAmps = 0;
 static uint16_t motorKERPM[4] = {0,0,0,0};
 static uint16_t motorCurrent[4] = {0,0,0,0};
 static uint16_t ESCTemps[4] = {0,0,0,0};
@@ -209,6 +211,7 @@ void loop(){
   
   static char LipoVoltC[30];
   static char LipoMAHC[30];
+  static char MaxAmpsC[30];
   
   static char Throttle[30];
   static char Current[30];
@@ -243,6 +246,7 @@ void loop(){
           
            throttle = ((serialBuf[STARTCOUNT]<<8) | serialBuf[1+STARTCOUNT])/10;
           
+           armed =   ((serialBuf[15+STARTCOUNT]<<8) | serialBuf[16+STARTCOUNT]);
            LipoVoltage =   ((serialBuf[17+STARTCOUNT]<<8) | serialBuf[18+STARTCOUNT]);
            
            uint32_t tmpVoltage = 0;
@@ -275,6 +279,7 @@ void loop(){
            if(voltDev!=0) LipoVoltage = tmpVoltage/voltDev;
              
            
+           MaxAmps =       ((serialBuf[146+STARTCOUNT]<<8) | serialBuf[147+STARTCOUNT]);
            LipoMAH =       ((serialBuf[148+STARTCOUNT]<<8) | serialBuf[149+STARTCOUNT]);
            
            static uint32_t windedupfilterdatas[8];
@@ -396,6 +401,7 @@ void loop(){
     LipoVoltC[lipoVoltPos++] = 'v';
     
     uint8_t lipoMAHPos = print_int16(LipoMAH, LipoMAHC,0,1);
+    uint8_t maxAmpsPos = print_int16(MaxAmps, MaxAmpsC,0,0);
     
     uint8_t ESCmarginBot       = 0;
     uint8_t ESCmarginTop       = 0;
@@ -504,6 +510,11 @@ void loop(){
       if(displayNickname){
         OSD.setCursor( 10, 6 );
         OSD.print( NICKNAME );
+      }
+      if(displayCurrent){
+        OSD.setCursor( 10, 8 );
+      	//OSD.setCursor( -(5+lipoMAHPos), -1 );
+        OSD.print( MaxAmpsC );
       }
     }
     
