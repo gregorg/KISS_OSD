@@ -32,6 +32,7 @@ For more information, please refer to <http://unlicense.org>
 
 // CONFIGURATION
 //=========================================================================================================================
+#define NICKNAME "MY_NICKNAME"
 
 // video system
 //=============================
@@ -53,28 +54,30 @@ For more information, please refer to <http://unlicense.org>
 
 // displayed datas
 //=============================
+#define DISPLAY_NICKNAME
 #define DISPLAY_RC_THROTTLE
 #define DISPLAY_COMB_CURRENT
 #define DISPLAY_LIPO_VOLTAGE
 #define DISPLAY_MA_CONSUMPTION
 #define DISPLAY_ESC_KRPM
-#define DISPLAY_ESC_CURRENT
+//#define DISPLAY_ESC_CURRENT
 #define DISPLAY_ESC_TEMPERATURE
 
 // displayed datas in reduced mode
 //=============================
+#define RED_DISPLAY_NICKNAME
 //#define RED_DISPLAY_RC_THROTTLE
 //#define RED_DISPLAY_COMB_CURRENT
 #define RED_DISPLAY_LIPO_VOLTAGE
 #define RED_DISPLAY_MA_CONSUMPTION
 //#define RED_DISPLAY_ESC_KRPM
 //#define RED_DISPLAY_ESC_CURRENT
-//#define RED_DISPLAY_ESC_TEMPERATURE
+#define RED_DISPLAY_ESC_TEMPERATURE
 
 
 // reduced mode channel config
 //=============================
-#define RED_MODE_AUX_CHAN 4 // 0-4, 0 = none
+#define RED_MODE_AUX_CHAN 1 // 0-4, 0 = none
 
 #define RED_ON_AUX_LOW
 //#define RED_ON_AUX_MID
@@ -398,7 +401,8 @@ void loop(){
     uint8_t ESCmarginTop       = 0;
     uint8_t TMPmargin          = 0;
     uint8_t CurrentMargin      = 0;
-    
+
+    uint8_t displayNickname    = 0;
     uint8_t displayRCthrottle  = 0;
     uint8_t displayCombCurrent = 0;
     uint8_t displayLipoVoltage = 0;
@@ -417,7 +421,7 @@ void loop(){
       #if defined(RED_ON_AUX_MID)
         #define RED_MODE_ACTIVE AuxChanVals[RED_MODE_AUX_CHAN-1] > -250 && RED_MODE_ACTIVE AuxChanVals[RED_MODE_AUX_CHAN-1] < 250
       #endif
-      #if defined(RED_ON_AUX_MID)
+      #if defined(RED_ON_AUX_HIGH)
         #define RED_MODE_ACTIVE AuxChanVals[RED_MODE_AUX_CHAN-1] > 250
       #endif
       
@@ -435,6 +439,9 @@ void loop(){
     }
     
     if(reducedMode == 0){
+      #if defined(DISPLAY_NICKNAME)
+      displayNickname = 1;
+      #endif
       #if defined(DISPLAY_RC_THROTTLE)
       displayRCthrottle = 1;
       #endif
@@ -457,6 +464,9 @@ void loop(){
       displayTemperature = 1;
       #endif      
     }else{
+      #if defined(RED_DISPLAY_NICKNAME)
+      displayNickname = 1;
+      #endif
       #if defined(RED_DISPLAY_RC_THROTTLE)
       displayRCthrottle = 1;
       #endif
@@ -484,7 +494,17 @@ void loop(){
       OSD.setCursor( 0, 0 );
       OSD.print( "throt:" );
       OSD.print( Throttle );
+      
+      if(displayNickname){
+        OSD.setCursor( 10, 0 );
+        OSD.print( NICKNAME );
+      }
       ESCmarginTop = 1;
+    } else {
+      if(displayNickname){
+        OSD.setCursor( 10, 6 );
+        OSD.print( NICKNAME );
+      }
     }
     
     if(displayCombCurrent){
@@ -502,7 +522,7 @@ void loop(){
     
     if(displayConsumption){
       OSD.setCursor( -(5+lipoMAHPos), -1 );
-      OSD.print( "co:" );
+      //OSD.print( "co:" );
       OSD.print( LipoMAHC );
       OSD.print( "ma" );
       ESCmarginBot = 1;
@@ -546,6 +566,5 @@ void loop(){
       
   }    
 } 
-
 
 
