@@ -1,12 +1,12 @@
 # Kiss OSD
 
-![Flyduino KISS FC](http://flyduino.net/KISS-FC-32bit-Flight-Controller_1)
-![Flyduino MinimOSD pre-flashed](http://flyduino.net/KissFC-OSD-FW-preflashed)
+* Flyduino KISS FC: http://flyduino.net/KISS-FC-32bit-Flight-Controller_1
+* Flyduino MinimOSD pre-flashed: http://flyduino.net/KissFC-OSD-FW-preflashed
 
 
 ## How-to upload it in your MinimOSD
 
-![Thanks to shaydn from rcgroups.com](http://www.rcgroups.com/forums/showpost.php?p=34092758&postcount=2259)
+Thanks to shaydn from rcgroups.com: http://www.rcgroups.com/forums/showpost.php?p=34092758&postcount=2259
 
 My successful sequence was as follows:
 1. Get MW_OSD firmware and open in Arduino IDE.
