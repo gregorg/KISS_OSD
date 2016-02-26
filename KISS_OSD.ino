@@ -60,6 +60,7 @@ For more information, please refer to <http://unlicense.org>
 #define DISPLAY_ESC_KRPM
 #define DISPLAY_ESC_CURRENT
 #define DISPLAY_ESC_TEMPERATURE
+#define DISPLAY_TIME
 
 // displayed datas in reduced mode
 //=============================
@@ -70,7 +71,7 @@ For more information, please refer to <http://unlicense.org>
 //#define RED_DISPLAY_ESC_KRPM
 //#define RED_DISPLAY_ESC_CURRENT
 //#define RED_DISPLAY_ESC_TEMPERATURE
-
+//#define RED_DISPLAY_TIME
 
 // reduced mode channel config
 //=============================
@@ -141,6 +142,7 @@ static uint16_t motorCurrent[4] = {0,0,0,0};
 static uint16_t ESCTemps[4] = {0,0,0,0};
 static int16_t  AuxChanVals[4] = {0,0,0,0};
 static uint8_t  reducedMode = 0;
+static uint16_t  time = 0;
 
 uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
 	uint16_t useVal = p_int;
@@ -209,6 +211,7 @@ void loop(){
   
   static char Throttle[30];
   static char Current[30];
+  static char Time[30];
   
   static uint8_t serialBuf[255];
   static uint8_t minBytes = 0;
@@ -239,8 +242,10 @@ void loop(){
          if(checksum == serialBuf[recBytes-1]){
           
            throttle = ((serialBuf[STARTCOUNT]<<8) | serialBuf[1+STARTCOUNT])/10;
-          
            LipoVoltage =   ((serialBuf[17+STARTCOUNT]<<8) | serialBuf[18+STARTCOUNT]);
+           
+           if (millis() > time) time += 1000;
+           	
            
            uint32_t tmpVoltage = 0;
            uint32_t voltDev = 0;
@@ -335,6 +340,7 @@ void loop(){
       
       LipoVoltC[i] = ' ';
       Throttle[i] = ' ';
+      Time[i]=' ';
     }
     
     
@@ -389,6 +395,10 @@ void loop(){
     ESC4Temp[TempPoses[3]++] = '°';
     
     
+    uint8_t TimeShow = print_int16(time, Time,0,1);
+    Time[TimeShow++] = 'sec';
+    
+    
     uint8_t lipoVoltPos = print_int16(LipoVoltage, LipoVoltC,2,1);
     LipoVoltC[lipoVoltPos++] = 'v';
     
@@ -406,6 +416,7 @@ void loop(){
     uint8_t displayKRPM        = 0;
     uint8_t displayCurrent     = 0;
     uint8_t displayTemperature = 0;
+    uint8_t displayTime = 0;
     
      
     
@@ -456,6 +467,9 @@ void loop(){
       #if defined(DISPLAY_ESC_TEMPERATURE)
       displayTemperature = 1;
       #endif      
+      #if defined(DISPLAY_TIME)
+      displayTime = 1;
+      #endif      
     }else{
       #if defined(RED_DISPLAY_RC_THROTTLE)
       displayRCthrottle = 1;
@@ -478,6 +492,10 @@ void loop(){
       #if defined(RED_DISPLAY_ESC_TEMPERATURE)
       displayTemperature = 1;
       #endif    
+      #if defined(RED_DISPLAY_TIME)
+      displayTime = 1;
+      #endif    
+
     }
     
     if(displayRCthrottle){
@@ -543,9 +561,15 @@ void loop(){
       OSD.setCursor( 0, -(1+TMPmargin+ESCmarginBot) );
       OSD.print( ESC4Temp );
     }  
+    
+    if(displayTime){
+      OSD.setCursor( 10, 0 );
+      OSD.print( "time:" );
+      OSD.print( Time );
+      ESCmarginTop = 1;
+    }
       
   }    
 } 
-
 
 
