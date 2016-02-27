@@ -32,7 +32,7 @@ For more information, please refer to <http://unlicense.org>
 
 // CONFIGURATION
 //=========================================================================================================================
-#define NICKNAME "MY_NICKNAME"
+#define NICKNAME "SKYGREG"
 
 // video system
 //=============================
@@ -60,7 +60,7 @@ For more information, please refer to <http://unlicense.org>
 #define DISPLAY_LIPO_VOLTAGE
 #define DISPLAY_MA_CONSUMPTION
 #define DISPLAY_ESC_KRPM
-//#define DISPLAY_ESC_CURRENT
+#define DISPLAY_ESC_CURRENT
 #define DISPLAY_ESC_TEMPERATURE
 
 // displayed datas in reduced mode
@@ -72,6 +72,7 @@ For more information, please refer to <http://unlicense.org>
 #define RED_DISPLAY_MA_CONSUMPTION
 //#define RED_DISPLAY_ESC_KRPM
 //#define RED_DISPLAY_ESC_CURRENT
+#define RED_DISPLAY_STATS
 #define RED_DISPLAY_ESC_TEMPERATURE
 
 
@@ -141,6 +142,10 @@ static uint16_t armed = 0;
 static uint16_t LipoVoltage = 0;
 static uint16_t LipoMAH = 0;
 static uint16_t MaxAmps = 0;
+static uint16_t MaxRPMs = 0;
+static uint16_t MaxWatt = 0;
+static uint16_t MaxTemp = 0;
+static uint16_t MinBat = 0;
 static uint16_t motorKERPM[4] = {0,0,0,0};
 static uint16_t motorCurrent[4] = {0,0,0,0};
 static uint16_t ESCTemps[4] = {0,0,0,0};
@@ -211,8 +216,7 @@ void loop(){
   
   static char LipoVoltC[30];
   static char LipoMAHC[30];
-  static char MaxAmpsC[30];
-  
+
   static char Throttle[30];
   static char Current[30];
   
@@ -277,10 +281,21 @@ void loop(){
            }
            
            if(voltDev!=0) LipoVoltage = tmpVoltage/voltDev;
-             
-           
+
+           if (MinBat == 0)
+           {
+             MinBat = LipoVoltage;
+           }
+           else if (LipoVoltage < MinBat)
+           {
+             MinBat = LipoVoltage;
+           }
+
+
            MaxAmps =       ((serialBuf[146+STARTCOUNT]<<8) | serialBuf[147+STARTCOUNT]);
            LipoMAH =       ((serialBuf[148+STARTCOUNT]<<8) | serialBuf[149+STARTCOUNT]);
+           MaxRPMs =       ((serialBuf[150+STARTCOUNT]<<8) | serialBuf[151+STARTCOUNT]);
+           MaxWatt =       ((serialBuf[152+STARTCOUNT]<<8) | serialBuf[153+STARTCOUNT]);
            
            static uint32_t windedupfilterdatas[8];
            
@@ -310,7 +325,23 @@ void loop(){
            ESCTemps[1] = ((serialBuf[93+STARTCOUNT]<<8) | serialBuf[94+STARTCOUNT]);
            ESCTemps[2] = ((serialBuf[103+STARTCOUNT]<<8) | serialBuf[104+STARTCOUNT]);
            ESCTemps[3] = ((serialBuf[113+STARTCOUNT]<<8) | serialBuf[114+STARTCOUNT]);
-           
+           if (ESCTemps[0] > MaxTemp)
+           {
+             MaxTemp = ESCTemps[0];
+           }
+           if (ESCTemps[1] > MaxTemp)
+           {
+             MaxTemp = ESCTemps[1];
+           }
+           if (ESCTemps[2] > MaxTemp)
+           {
+             MaxTemp = ESCTemps[2];
+           }
+           if (ESCTemps[3] > MaxTemp)
+           {
+             MaxTemp = ESCTemps[3];
+           }
+
            AuxChanVals[0] = ((serialBuf[8+STARTCOUNT]<<8) | serialBuf[9+STARTCOUNT]);
            AuxChanVals[1] = ((serialBuf[10+STARTCOUNT]<<8) | serialBuf[11+STARTCOUNT]);
            AuxChanVals[2] = ((serialBuf[12+STARTCOUNT]<<8) | serialBuf[13+STARTCOUNT]);
@@ -401,12 +432,12 @@ void loop(){
     LipoVoltC[lipoVoltPos++] = 'v';
     
     uint8_t lipoMAHPos = print_int16(LipoMAH, LipoMAHC,0,1);
-    uint8_t maxAmpsPos = print_int16(MaxAmps, MaxAmpsC,0,0);
     
     uint8_t ESCmarginBot       = 0;
     uint8_t ESCmarginTop       = 0;
     uint8_t TMPmargin          = 0;
     uint8_t CurrentMargin      = 0;
+    uint8_t reducedX           = 7;
 
     uint8_t displayNickname    = 0;
     uint8_t displayRCthrottle  = 0;
@@ -416,6 +447,7 @@ void loop(){
     uint8_t displayKRPM        = 0;
     uint8_t displayCurrent     = 0;
     uint8_t displayTemperature = 0;
+    uint8_t displayStats       = 0;
     
      
     
@@ -434,6 +466,8 @@ void loop(){
       if(RED_MODE_ACTIVE)reducedMode = 1;
       else reducedMode = 0;
     #endif
+    // debug
+    //reducedMode = 1;
     
     if(reducedMode != lastMode){
       lastMode = reducedMode;
@@ -494,6 +528,9 @@ void loop(){
       #if defined(RED_DISPLAY_ESC_TEMPERATURE)
       displayTemperature = 1;
       #endif    
+      #if defined(RED_DISPLAY_STATS)
+      displayStats = 1;
+      #endif    
     }
     
     if(displayRCthrottle){
@@ -507,14 +544,44 @@ void loop(){
       }
       ESCmarginTop = 1;
     } else {
+      if(displayStats){
+        reducedX = 4;
+      }
       if(displayNickname){
-        OSD.setCursor( 10, 6 );
+        OSD.setCursor( 10, reducedX );
         OSD.print( NICKNAME );
       }
-      if(displayCurrent){
-        OSD.setCursor( 10, 8 );
-      	//OSD.setCursor( -(5+lipoMAHPos), -1 );
-        OSD.print( MaxAmpsC );
+        if (displayStats){
+        OSD.setCursor( 4, reducedX + 2 );
+        //OSD.setCursor( -(5+lipoMAHPos), -1 );
+        OSD.print( "- max Amps : " );
+        OSD.print( MaxAmps );
+        OSD.print( "A        " );
+
+        OSD.setCursor( 4, reducedX + 3 );
+        OSD.print( "- conso    : " );
+        OSD.print( LipoMAHC );
+        OSD.print( "ma       " );
+
+        OSD.setCursor( 4, reducedX + 4 );
+        OSD.print( "- max RPMs : " );
+        OSD.print( MaxRPMs );
+        OSD.print( "         " );
+
+        OSD.setCursor( 4, reducedX + 5 );
+        OSD.print( "- max Watt : " );
+        OSD.print( MaxWatt );
+        OSD.print( "W        " );
+
+        OSD.setCursor( 4, reducedX + 6 );
+        OSD.print( "- max Temp : " );
+        OSD.print( MaxTemp );
+        OSD.print( "         " );
+
+        OSD.setCursor( 4, reducedX + 7 );
+        OSD.print( "- min bat  : " );
+        OSD.print( MinBat );
+        OSD.print( "v        " );
       }
     }
     
