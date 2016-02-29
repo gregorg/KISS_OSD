@@ -75,6 +75,12 @@ For more information, please refer to <http://unlicense.org>
 #define RED_DISPLAY_STATS
 #define RED_DISPLAY_ESC_TEMPERATURE
 
+#define RED_DISPLAY_MAXC
+// configure max C with Lipo capacity:
+#if defined(RED_DISPLAY_MAXC)
+const int LIPOS[] = {1300,1500,1000};
+#endif
+
 
 // reduced mode channel config
 //=============================
@@ -84,7 +90,9 @@ For more information, please refer to <http://unlicense.org>
 //#define RED_ON_AUX_MID
 //#define RED_ON_AUX_HIGH
 
-
+// internals
+//=============================
+#define KISSOSDVERS "Kiss OSD - V1.2"
 // END OF CONFIGURATION
 //=========================================================================================================================
 
@@ -142,6 +150,7 @@ static uint16_t armed = 0;
 static uint16_t LipoVoltage = 0;
 static uint16_t LipoMAH = 0;
 static uint16_t MaxAmps = 0;
+static uint16_t MaxC    = 0;
 static uint16_t MaxRPMs = 0;
 static uint16_t MaxWatt = 0;
 static uint16_t MaxTemp = 0;
@@ -153,29 +162,29 @@ static int16_t  AuxChanVals[4] = {0,0,0,0};
 static uint8_t  reducedMode = 0;
 
 uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
-	uint16_t useVal = p_int;
-	uint8_t pre = ' ';
-	if(p_int < 0){
-		useVal = p_int*-1;
-		pre = '-';
-	}
-	uint8_t aciidig[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-	uint8_t i = 0;
+    uint16_t useVal = p_int;
+    uint8_t pre = ' ';
+    if(p_int < 0){
+        useVal = p_int*-1;
+        pre = '-';
+    }
+    uint8_t aciidig[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    uint8_t i = 0;
         uint8_t digits[6] = {0,0,0,0,0,0};
-	while(useVal >= 10000){digits[0]++; useVal-=10000;}
-	while(useVal >= 1000){digits[1]++; useVal-=1000;}
-	while(useVal >= 100){digits[2]++; useVal-=100;}
-	while(useVal >= 10){digits[3]++; useVal-=10;}
-	digits[4] = useVal;
+    while(useVal >= 10000){digits[0]++; useVal-=10000;}
+    while(useVal >= 1000){digits[1]++; useVal-=1000;}
+    while(useVal >= 100){digits[2]++; useVal-=100;}
+    while(useVal >= 10){digits[3]++; useVal-=10;}
+    digits[4] = useVal;
         char result[6] = {' ',' ',' ',' ',' ','0'};
-	uint8_t signdone = 0;
-	for(i = 0; i < 6;i++){
-		if(i == 5 && signdone == 0) continue;
-		else if(aciidig[digits[i]] != '0' && signdone == 0){
-			result[i] = pre;
-			signdone = 1;
-		}else if(signdone) result[i] = aciidig[digits[i-1]];
-	}
+    uint8_t signdone = 0;
+    for(i = 0; i < 6;i++){
+        if(i == 5 && signdone == 0) continue;
+        else if(aciidig[digits[i]] != '0' && signdone == 0){
+            result[i] = pre;
+            signdone = 1;
+        }else if(signdone) result[i] = aciidig[digits[i-1]];
+    }
         uint8_t CharPos = 0;
         for(i = 0; i < 6;i++){
           if(result[i] != ' ' || (AlignLeft == 0 || (i > 5-dec))) str[CharPos++] = result[i];
@@ -296,6 +305,9 @@ void loop(){
            LipoMAH =       ((serialBuf[148+STARTCOUNT]<<8) | serialBuf[149+STARTCOUNT]);
            MaxRPMs =       ((serialBuf[150+STARTCOUNT]<<8) | serialBuf[151+STARTCOUNT]);
            MaxWatt =       ((serialBuf[152+STARTCOUNT]<<8) | serialBuf[153+STARTCOUNT]);
+           #if defined(RED_DISPLAY_MAXC)
+           MaxC    =       MaxAmps / LIPOS[0] * 1000;
+           #endif
            
            static uint32_t windedupfilterdatas[8];
            
@@ -437,7 +449,7 @@ void loop(){
     uint8_t ESCmarginTop       = 0;
     uint8_t TMPmargin          = 0;
     uint8_t CurrentMargin      = 0;
-    uint8_t reducedX           = 7;
+    uint8_t middle_infos_x     = 7;
 
     uint8_t displayNickname    = 0;
     uint8_t displayRCthrottle  = 0;
@@ -545,40 +557,46 @@ void loop(){
       ESCmarginTop = 1;
     } else {
       if(displayStats){
-        reducedX = 4;
+        middle_infos_x = middle_infos_x - 3;
       }
       if(displayNickname){
-        OSD.setCursor( 10, reducedX );
+        OSD.setCursor( 10, middle_infos_x );
         OSD.print( NICKNAME );
       }
-        if (displayStats){
-        OSD.setCursor( 4, reducedX + 2 );
+      if (displayStats){
+        OSD.setCursor( 4, middle_infos_x + 2 );
         //OSD.setCursor( -(5+lipoMAHPos), -1 );
         OSD.print( "- max Amps : " );
         OSD.print( MaxAmps );
-        OSD.print( "A        " );
+        if (MaxC > 0) {
+          OSD.print( "A | " );
+          OSD.print( MaxC );
+          OSD.print( "C     " );
+        } else {
+          OSD.print( "A        " );
+        }
 
-        OSD.setCursor( 4, reducedX + 3 );
+        OSD.setCursor( 4, middle_infos_x + 3 );
         OSD.print( "- conso    : " );
         OSD.print( LipoMAHC );
         OSD.print( "ma       " );
 
-        OSD.setCursor( 4, reducedX + 4 );
+        OSD.setCursor( 4, middle_infos_x + 4 );
         OSD.print( "- max RPMs : " );
         OSD.print( MaxRPMs );
         OSD.print( "         " );
 
-        OSD.setCursor( 4, reducedX + 5 );
+        OSD.setCursor( 4, middle_infos_x + 5 );
         OSD.print( "- max Watt : " );
         OSD.print( MaxWatt );
         OSD.print( "W        " );
 
-        OSD.setCursor( 4, reducedX + 6 );
+        OSD.setCursor( 4, middle_infos_x + 6 );
         OSD.print( "- max Temp : " );
         OSD.print( MaxTemp );
         OSD.print( "         " );
 
-        OSD.setCursor( 4, reducedX + 7 );
+        OSD.setCursor( 4, middle_infos_x + 7 );
         OSD.print( "- min bat  : " );
         OSD.print( MinBat );
         OSD.print( "v        " );
@@ -646,3 +664,4 @@ void loop(){
 } 
 
 
+// vim: set ts=4 sw=4 expandtab:
