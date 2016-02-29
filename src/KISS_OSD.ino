@@ -433,7 +433,6 @@ void loop(){
     LipoVoltC[lipoVoltPos++] = 'v';
     
     uint8_t lipoMAHPos = print_int16(LipoMAH, LipoMAHC,0,1);
-    uint8_t maxAmpsPos = print_int16(MaxAmps, MaxAmpsC,0,0);
     
     uint8_t ESCmarginBot       = 0;
     uint8_t ESCmarginTop       = 0;
@@ -553,10 +552,6 @@ void loop(){
         OSD.setCursor( 10, reducedX );
         OSD.print( NICKNAME );
       }
-      if(displayCurrent){
-        OSD.setCursor( 10, 8 );
-      	//OSD.setCursor( -(5+lipoMAHPos), -1 );
-        OSD.print( MaxAmpsC );
         if (displayStats){
         OSD.setCursor( 4, reducedX + 2 );
         //OSD.setCursor( -(5+lipoMAHPos), -1 );
