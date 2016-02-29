@@ -216,7 +216,6 @@ void loop(){
   
   static char LipoVoltC[30];
   static char LipoMAHC[30];
-  static char MaxAmpsC[30];
   
   static char Throttle[30];
   static char Current[30];
