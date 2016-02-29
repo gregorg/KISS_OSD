@@ -72,7 +72,7 @@ For more information, please refer to <http://unlicense.org>
 #define RED_DISPLAY_MA_CONSUMPTION
 //#define RED_DISPLAY_ESC_KRPM
 //#define RED_DISPLAY_ESC_CURRENT
-#define RED_DISPLAY_STATS
+//#define RED_DISPLAY_STATS
 #define RED_DISPLAY_ESC_TEMPERATURE
 
 #define RED_DISPLAY_MAXC
@@ -147,6 +147,9 @@ void setup(){
 static int16_t  throttle = 0;
 static uint16_t current = 0;
 static uint16_t armed = 0;
+static uint16_t calybGyro = 0;
+static uint16_t failsafe = 0;
+static uint16_t mode = 0;
 static uint16_t LipoVoltage = 0;
 static uint16_t LipoMAH = 0;
 static uint16_t MaxAmps = 0;
@@ -228,6 +231,8 @@ void loop(){
   
   static char Throttle[30];
   static char Current[30];
+
+  static char MaxTempC[30];
   
   static uint8_t serialBuf[255];
   static uint8_t minBytes = 0;
@@ -261,6 +266,9 @@ void loop(){
           
            armed =   ((serialBuf[15+STARTCOUNT]<<8) | serialBuf[16+STARTCOUNT]);
            LipoVoltage =   ((serialBuf[17+STARTCOUNT]<<8) | serialBuf[18+STARTCOUNT]);
+           calybGyro =   ((serialBuf[39+STARTCOUNT]<<8) | serialBuf[40+STARTCOUNT]);
+           failsafe =   ((serialBuf[41+STARTCOUNT]<<8) | serialBuf[42+STARTCOUNT]);
+           mode =   ((serialBuf[64+STARTCOUNT]<<8) | serialBuf[65+STARTCOUNT]);
            
            uint32_t tmpVoltage = 0;
            uint32_t voltDev = 0;
@@ -305,8 +313,9 @@ void loop(){
            LipoMAH =       ((serialBuf[148+STARTCOUNT]<<8) | serialBuf[149+STARTCOUNT]);
            MaxRPMs =       ((serialBuf[150+STARTCOUNT]<<8) | serialBuf[151+STARTCOUNT]);
            MaxWatt =       ((serialBuf[152+STARTCOUNT]<<8) | serialBuf[153+STARTCOUNT]);
+           MaxAmps = 98;
            #if defined(RED_DISPLAY_MAXC)
-           MaxC    =       MaxAmps / LIPOS[0] * 1000;
+           MaxC    =       (double)MaxAmps * (double)1000 / (double)LIPOS[0];
            #endif
            
            static uint32_t windedupfilterdatas[8];
@@ -386,6 +395,7 @@ void loop(){
       
       LipoVoltC[i] = ' ';
       Throttle[i] = ' ';
+      MaxTempC[i] = ' ';
     }
     
     
@@ -479,7 +489,7 @@ void loop(){
       else reducedMode = 0;
     #endif
     // debug
-    //reducedMode = 1;
+    reducedMode = 1;
     
     if(reducedMode != lastMode){
       lastMode = reducedMode;
@@ -564,7 +574,8 @@ void loop(){
         OSD.print( NICKNAME );
       }
       if (displayStats){
-        OSD.setCursor( 4, middle_infos_x + 2 );
+        middle_infos_x++;
+        OSD.setCursor( 4, ++middle_infos_x );
         //OSD.setCursor( -(5+lipoMAHPos), -1 );
         OSD.print( "- max Amps : " );
         OSD.print( MaxAmps );
@@ -576,27 +587,29 @@ void loop(){
           OSD.print( "A        " );
         }
 
-        OSD.setCursor( 4, middle_infos_x + 3 );
+        OSD.setCursor( 4, ++middle_infos_x );
         OSD.print( "- conso    : " );
         OSD.print( LipoMAHC );
         OSD.print( "ma       " );
 
-        OSD.setCursor( 4, middle_infos_x + 4 );
+        OSD.setCursor( 4, ++middle_infos_x );
         OSD.print( "- max RPMs : " );
         OSD.print( MaxRPMs );
         OSD.print( "         " );
 
-        OSD.setCursor( 4, middle_infos_x + 5 );
+        OSD.setCursor( 4, ++middle_infos_x );
         OSD.print( "- max Watt : " );
         OSD.print( MaxWatt );
         OSD.print( "W        " );
 
-        OSD.setCursor( 4, middle_infos_x + 6 );
+        OSD.setCursor( 4, ++middle_infos_x );
         OSD.print( "- max Temp : " );
-        OSD.print( MaxTemp );
-        OSD.print( "         " );
+        uint8_t MaxTempPos = print_int16(MaxTemp, MaxTempC,0,1);
+        MaxTempC[MaxTempPos++] = '°';
+        OSD.print( MaxTempC );
+        OSD.print( "        " );
 
-        OSD.setCursor( 4, middle_infos_x + 7 );
+        OSD.setCursor( 4, ++middle_infos_x );
         OSD.print( "- min bat  : " );
         OSD.print( MinBat );
         OSD.print( "v        " );
@@ -660,6 +673,26 @@ void loop(){
       OSD.print( ESC4Temp );
     }  
       
+    /* debug */
+    middle_infos_x -= 2;
+    OSD.setCursor( 0, middle_infos_x );
+    OSD.print( "Aux: " );
+    OSD.print(AuxChanVals[0]);
+    OSD.print( " | " );
+    OSD.print(AuxChanVals[1]);
+    OSD.print( " | " );
+    OSD.print(AuxChanVals[2]);
+    OSD.print( " | " );
+    OSD.print(AuxChanVals[3]);
+    OSD.setCursor( 0, ++middle_infos_x );
+    OSD.print( "armed=" );
+    OSD.print(armed);
+    OSD.print( " mode=" );
+    OSD.print(mode);
+    middle_infos_x++; // display nickname
+    OSD.setCursor( 0, ++middle_infos_x );
+    OSD.print( "calybGyro: " );
+    OSD.print(calybGyro);
   }    
 } 
 
