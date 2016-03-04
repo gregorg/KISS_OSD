@@ -54,7 +54,7 @@ For more information, please refer to <http://unlicense.org>
 
 // displayed datas
 //=============================
-#define DISPLAY_NICKNAME
+//#define DISPLAY_NICKNAME
 #define DISPLAY_RC_THROTTLE
 #define DISPLAY_COMB_CURRENT
 #define DISPLAY_LIPO_VOLTAGE
@@ -65,7 +65,7 @@ For more information, please refer to <http://unlicense.org>
 
 // displayed datas in reduced mode
 //=============================
-#define RED_DISPLAY_NICKNAME
+//#define RED_DISPLAY_NICKNAME
 //#define RED_DISPLAY_RC_THROTTLE
 //#define RED_DISPLAY_COMB_CURRENT
 #define RED_DISPLAY_LIPO_VOLTAGE
@@ -146,10 +146,11 @@ void setup(){
 
 static int16_t  throttle = 0;
 static uint16_t current = 0;
-static uint16_t armed = 0;
-static uint16_t calybGyro = 0;
-static uint16_t failsafe = 0;
-static uint16_t mode = 0;
+static int8_t armed = 0;
+static int8_t calybGyro = 0;
+static uint8_t failsafe = 0;
+static int8_t mode = 0;
+static int8_t idleTime = 0;
 static uint16_t LipoVoltage = 0;
 static uint16_t LipoMAH = 0;
 static uint16_t MaxAmps = 0;
@@ -239,9 +240,14 @@ void loop(){
   static uint8_t recBytes = 0;
   
   static uint32_t LastLoopTime = 0;
+  static uint8_t blink_i = 0;
   
   if(micros()-LastLoopTime > 10000){
     LastLoopTime = micros();
+    blink_i++;
+    if (blink_i >= 40){
+      blink_i = 0;
+    }
   
     Serial.write(0x20); // request telemetrie
     
@@ -263,12 +269,30 @@ void loop(){
          if(checksum == serialBuf[recBytes-1]){
           
            throttle = ((serialBuf[STARTCOUNT]<<8) | serialBuf[1+STARTCOUNT])/10;
-          
-           armed =   ((serialBuf[15+STARTCOUNT]<<8) | serialBuf[16+STARTCOUNT]);
            LipoVoltage =   ((serialBuf[17+STARTCOUNT]<<8) | serialBuf[18+STARTCOUNT]);
+          
+           /*
+           armed =   ((serialBuf[15+STARTCOUNT]<<8) | serialBuf[16+STARTCOUNT]);
            calybGyro =   ((serialBuf[39+STARTCOUNT]<<8) | serialBuf[40+STARTCOUNT]);
-           failsafe =   ((serialBuf[41+STARTCOUNT]<<8) | serialBuf[42+STARTCOUNT]);
-           mode =   ((serialBuf[64+STARTCOUNT]<<8) | serialBuf[65+STARTCOUNT]);
+           */
+           armed =   serialBuf[16+STARTCOUNT];
+           mode =   serialBuf[65+STARTCOUNT];
+           idleTime =   serialBuf[82+STARTCOUNT];
+           //calybGyro =   serialBuf[40+STARTCOUNT];
+           if (serialBuf[41+STARTCOUNT] > 0)
+           {
+               failsafe =   1;
+           } else {
+               failsafe =   0;
+           }
+           //failsafe =   ((serialBuf[40+STARTCOUNT]<<8) | serialBuf[41+STARTCOUNT]);
+           if ((serialBuf[36+STARTCOUNT] + serialBuf[37+STARTCOUNT] + serialBuf[38+STARTCOUNT] + serialBuf[39+STARTCOUNT] + serialBuf[40+STARTCOUNT]) == 0)
+           {
+             calybGyro = 1;
+           } else {
+             calybGyro = 0;
+           }
+
            
            uint32_t tmpVoltage = 0;
            uint32_t voltDev = 0;
@@ -459,7 +483,7 @@ void loop(){
     uint8_t ESCmarginTop       = 0;
     uint8_t TMPmargin          = 0;
     uint8_t CurrentMargin      = 0;
-    uint8_t middle_infos_x     = 7;
+    uint8_t middle_infos_y     = 7;
 
     uint8_t displayNickname    = 0;
     uint8_t displayRCthrottle  = 0;
@@ -567,15 +591,15 @@ void loop(){
       ESCmarginTop = 1;
     } else {
       if(displayStats){
-        middle_infos_x = middle_infos_x - 3;
+        middle_infos_y = middle_infos_y - 3;
       }
       if(displayNickname){
-        OSD.setCursor( 10, middle_infos_x );
+        OSD.setCursor( 11, middle_infos_y );
         OSD.print( NICKNAME );
       }
       if (displayStats){
-        middle_infos_x++;
-        OSD.setCursor( 4, ++middle_infos_x );
+        middle_infos_y++;
+        OSD.setCursor( 4, ++middle_infos_y );
         //OSD.setCursor( -(5+lipoMAHPos), -1 );
         OSD.print( "- max Amps : " );
         OSD.print( MaxAmps );
@@ -587,29 +611,29 @@ void loop(){
           OSD.print( "A        " );
         }
 
-        OSD.setCursor( 4, ++middle_infos_x );
+        OSD.setCursor( 4, ++middle_infos_y );
         OSD.print( "- conso    : " );
         OSD.print( LipoMAHC );
         OSD.print( "ma       " );
 
-        OSD.setCursor( 4, ++middle_infos_x );
+        OSD.setCursor( 4, ++middle_infos_y );
         OSD.print( "- max RPMs : " );
         OSD.print( MaxRPMs );
         OSD.print( "         " );
 
-        OSD.setCursor( 4, ++middle_infos_x );
+        OSD.setCursor( 4, ++middle_infos_y );
         OSD.print( "- max Watt : " );
         OSD.print( MaxWatt );
         OSD.print( "W        " );
 
-        OSD.setCursor( 4, ++middle_infos_x );
+        OSD.setCursor( 4, ++middle_infos_y );
         OSD.print( "- max Temp : " );
         uint8_t MaxTempPos = print_int16(MaxTemp, MaxTempC,0,1);
         MaxTempC[MaxTempPos++] = '°';
         OSD.print( MaxTempC );
         OSD.print( "        " );
 
-        OSD.setCursor( 4, ++middle_infos_x );
+        OSD.setCursor( 4, ++middle_infos_y );
         OSD.print( "- min bat  : " );
         OSD.print( MinBat );
         OSD.print( "v        " );
@@ -674,25 +698,62 @@ void loop(){
     }  
       
     /* debug */
-    middle_infos_x -= 2;
-    OSD.setCursor( 0, middle_infos_x );
-    OSD.print( "Aux: " );
-    OSD.print(AuxChanVals[0]);
-    OSD.print( " | " );
-    OSD.print(AuxChanVals[1]);
-    OSD.print( " | " );
-    OSD.print(AuxChanVals[2]);
-    OSD.print( " | " );
-    OSD.print(AuxChanVals[3]);
-    OSD.setCursor( 0, ++middle_infos_x );
-    OSD.print( "armed=" );
-    OSD.print(armed);
-    OSD.print( " mode=" );
-    OSD.print(mode);
-    middle_infos_x++; // display nickname
-    OSD.setCursor( 0, ++middle_infos_x );
-    OSD.print( "calybGyro: " );
-    OSD.print(calybGyro);
+    if (blink_i % 10 == 0) {
+      middle_infos_y -= 6;
+      OSD.setCursor( 0, middle_infos_y );
+      OSD.print( "armed=" );
+      OSD.print(armed);
+      OSD.print( " mode=" );
+      OSD.print(mode);
+      OSD.print( " idle=" );
+      OSD.print(idleTime);
+      OSD.print( "         " );
+
+      middle_infos_y++;
+      OSD.setCursor( 0, middle_infos_y );
+      OSD.print( "calyb=" );
+      OSD.print(calybGyro);
+      OSD.print( " failsafe=" );
+      OSD.print(failsafe);
+      OSD.print( "         " );
+      middle_infos_y++;
+      for(i=0; i<=9; i++)
+      {
+          OSD.setCursor( 0, middle_infos_y+i );
+          OSD.print(i+36);
+          OSD.print(":");
+          OSD.print(serialBuf[i+36]);
+          OSD.print("     ");
+      }
+      for(i=0; i<=9; i++)
+      {
+          OSD.setCursor( 10, middle_infos_y+i );
+          OSD.print(i+80);
+          OSD.print(": ");
+          OSD.print(serialBuf[i+80]);
+          OSD.print("      ");
+      }
+    }
+
+/*
+    if(reducedMode == 1){
+      OSD.setCursor( 10, -2 );
+      if (calybGyro > 0) {
+        if (blink_i >= 20) {
+          OSD.print( "calibrating" );
+        } else {
+        }
+      } else {
+          OSD.print( "           " );
+      }
+      */
+      /*
+      if (armed == 0) {
+        OSD.setCursor( 11, -4 );
+        OSD.print( "disarmed" );
+      }
+    }
+      */
   }    
 } 
 
