@@ -57,7 +57,7 @@ For more information, please refer to <http://unlicense.org>
 #define DISPLAY_NICKNAME
 #define DISPLAY_TIME
 #define DISPLAY_RC_THROTTLE
-#define DISPLAY_COMB_CURRENT
+//#define DISPLAY_COMB_CURRENT
 #define DISPLAY_LIPO_VOLTAGE
 #define DISPLAY_MA_CONSUMPTION
 //#define DISPLAY_ESC_KRPM
@@ -215,8 +215,10 @@ uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
         return CharPos;
 }	
 
-void print_time(uint16_t seconds, char *time_str) {
-    uint8_t minutes = 0;
+void print_time(uint16_t time, char *time_str) {
+    uint16_t seconds = time / 1000;
+    uint8_t mills = time % 1000;
+    uint8_t minutes = seconds / 60;
     if (seconds > 60) {
       minutes = seconds/60;
     } else {
@@ -224,15 +226,28 @@ void print_time(uint16_t seconds, char *time_str) {
     }
     seconds = seconds - (minutes * 60); // reste
     static char time_sec[6];
+    static char time_mil[6];
     uint8_t i = 0;
     uint8_t time_pos = print_int16(minutes, time_str,0,1);
     time_str[time_pos++] = 'm';
-    print_int16(seconds, time_sec,0,1);
-    for (i=0; i<6; i++)
+
+    uint8_t sec_pos = print_int16(seconds, time_sec,0,1);
+    for (i=0; i<sec_pos; i++)
     {
       time_str[time_pos++] = time_sec[i];
     }
-    for (i=time_pos; i<30; i++)
+    time_str[time_pos++] = '.';
+
+    uint8_t mil_pos = print_int16(mills, time_mil,0,1);
+    time_str[time_pos++] = time_mil[0];
+    /*
+    for (i=0; i<mil_pos; i++)
+    {
+      time_str[time_pos++] = time_mil[i];
+    }
+    */
+
+    for (i=time_pos; i<9; i++)
     {
       time_str[time_pos++] = ' ';
     }
@@ -478,8 +493,6 @@ void loop(){
       LipoMAHC[i] = ' ';
       Throttle[i] = ' ';
       MaxTempC[i] = ' ';
-      Time[i]=' ';
-      TotalTime[i]=' ';
     }
     
     
@@ -657,7 +670,7 @@ void loop(){
       #endif 
     }
 
-    print_time(time/1000, Time);
+    print_time(time, Time);
     
     if(displayRCthrottle){
       OSD.setCursor( 0, 0 );
@@ -680,7 +693,7 @@ void loop(){
       if (displayStats){
         middle_infos_y++;
 
-        print_time(total_time/1000, TotalTime);
+        print_time(total_time, TotalTime);
         OSD.setCursor( 5, ++middle_infos_y );
         OSD.print( "time     : " );
         OSD.print( TotalTime );
@@ -780,7 +793,7 @@ void loop(){
       OSD.print( ESC4Temp );
     }  
 
-    if(displayTime) {
+    if(displayTime && time > 0) {
       OSD.setCursor( 12, -2 );
       OSD.print( Time );
       //ESCmarginTop = 1;
