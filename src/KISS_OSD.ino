@@ -404,7 +404,7 @@ void loop(){
              MinBat = LipoVoltage;
            }
            
-           MaxAmps =       ((serialBuf[146+STARTCOUNT]<<8) | serialBuf[147+STARTCOUNT]);
+           MaxAmps =       ((serialBuf[146+STARTCOUNT]<<8) | serialBuf[147+STARTCOUNT]) / 1000;
            LipoMAH =       ((serialBuf[148+STARTCOUNT]<<8) | serialBuf[149+STARTCOUNT]);
            MaxRPMs =       ((serialBuf[150+STARTCOUNT]<<8) | serialBuf[151+STARTCOUNT]);
            MaxWatt =       ((serialBuf[152+STARTCOUNT]<<8) | serialBuf[153+STARTCOUNT]);
