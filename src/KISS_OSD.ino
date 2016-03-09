@@ -55,7 +55,7 @@ For more information, please refer to <http://unlicense.org>
 // displayed datas
 //=============================
 #define DISPLAY_NICKNAME
-#define DISPLAY_TIME
+#define DISPLAY_TIMER
 #define DISPLAY_RC_THROTTLE
 //#define DISPLAY_COMB_CURRENT
 #define DISPLAY_LIPO_VOLTAGE
@@ -67,7 +67,7 @@ For more information, please refer to <http://unlicense.org>
 // displayed datas in reduced mode
 //=============================
 #define RED_DISPLAY_NICKNAME
-#define RED_DISPLAY_TIME
+#define RED_DISPLAY_TIMER
 //#define RED_DISPLAY_RC_THROTTLE
 //#define RED_DISPLAY_COMB_CURRENT
 #define RED_DISPLAY_LIPO_VOLTAGE
@@ -103,7 +103,7 @@ const int LIPOS[] = {1300,1500,1000};
 #undef RED_DISPLAY_NICKNAME
 #undef DISPLAY_NICKNAME
 #undef RED_DISPLAY_STATS
-#undef RED_DISPLAY_TIME
+#undef RED_DISPLAY_TIMER
 //#define RED_DISPLAY_RC_THROTTLE
 #endif
 // END OF CONFIGURATION
@@ -631,7 +631,7 @@ void loop(){
       #if defined(DISPLAY_ESC_TEMPERATURE)
       displayTemperature = 1;
       #endif      
-      #if defined(DISPLAY_TIME)
+      #if defined(DISPLAY_TIMER)
       displayTime = 1;
       #endif 
     }else{
@@ -661,17 +661,17 @@ void loop(){
       #endif    
 
       #if defined(RED_DISPLAY_STATS)
-      #if defined(RED_DISPLAY_TIME)
+      #if defined(RED_DISPLAY_TIMER)
       // if armed at least 1x
       if (total_time > 10000) {
       #endif    
         displayStats = 1;
-      #if defined(RED_DISPLAY_TIME)
+      #if defined(RED_DISPLAY_TIMER)
       }
       #endif    
       #endif    
 
-      #if defined(RED_DISPLAY_TIME)
+      #if defined(RED_DISPLAY_TIMER)
       displayTime = 1;
       #endif 
     }
