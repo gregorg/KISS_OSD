@@ -6,7 +6,9 @@
 
 ## How-to upload it in your MinimOSD
 
-Thanks to shaydn from rcgroups.com: http://www.rcgroups.com/forums/showpost.php?p=34092758&postcount=2259
+How-to from shaydn: http://www.rcgroups.com/forums/showpost.php?p=34092758
+
+How-to from RevsUK: http://www.rcgroups.com/forums/showpost.php?p=34195714
 
 My successful sequence was as follows:
 1. Get MW_OSD firmware and open in Arduino IDE.
