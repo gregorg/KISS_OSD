@@ -659,12 +659,18 @@ void loop(){
       #if defined(RED_DISPLAY_ESC_TEMPERATURE)
       displayTemperature = 1;
       #endif    
+
       #if defined(RED_DISPLAY_STATS)
+      #if defined(RED_DISPLAY_TIME)
       // if armed at least 1x
       if (total_time > 10000) {
+      #endif    
         displayStats = 1;
+      #if defined(RED_DISPLAY_TIME)
       }
       #endif    
+      #endif    
+
       #if defined(RED_DISPLAY_TIME)
       displayTime = 1;
       #endif 
