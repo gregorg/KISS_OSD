@@ -177,9 +177,9 @@ static uint16_t motorCurrent[4] = {0,0,0,0};
 static uint16_t ESCTemps[4] = {0,0,0,0};
 static int16_t  AuxChanVals[4] = {0,0,0,0};
 static uint8_t  reducedMode = 0;
-static uint16_t start_time = 0;
+static unsigned long start_time = 0;
 static unsigned long time = 0;
-static uint16_t total_time = 0;
+static unsigned long total_time = 0;
 
 uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
     uint16_t useVal = p_int;
@@ -215,11 +215,11 @@ uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
         return CharPos;
 }	
 
-void print_time(uint16_t time, char *time_str) {
+void print_time(unsigned long time, char *time_str) {
     uint16_t seconds = time / 1000;
     uint8_t mills = time % 1000;
     uint8_t minutes = seconds / 60;
-    if (seconds > 60) {
+    if (seconds >= 60) {
       minutes = seconds/60;
     } else {
       minutes = 0;
