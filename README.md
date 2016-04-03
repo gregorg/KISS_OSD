@@ -11,6 +11,7 @@ How-to from shaydn: http://www.rcgroups.com/forums/showpost.php?p=34092758
 How-to from RevsUK: http://www.rcgroups.com/forums/showpost.php?p=34195714
 
 My successful sequence was as follows:
+
 1. Get MW_OSD firmware and open in Arduino IDE.
 2. Edit Config.h to comment out the line "#define LOADFONT_DEFAULT"
 3. Download the following perl script and make it executable (chmod 755 mcm2hl.pl) https://github.com/AeroQuad/AeroQuad/blob/master/MAX7456_Font_Updater/mcm2h.pl
