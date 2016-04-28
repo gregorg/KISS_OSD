@@ -55,7 +55,7 @@ For more information, please refer to <http://unlicense.org>
 // displayed datas
 //=============================
 #define DISPLAY_NICKNAME
-#define DISPLAY_TIMER
+//#define DISPLAY_TIMER
 #define DISPLAY_RC_THROTTLE
 //#define DISPLAY_COMB_CURRENT
 #define DISPLAY_LIPO_VOLTAGE
@@ -67,7 +67,7 @@ For more information, please refer to <http://unlicense.org>
 // displayed datas in reduced mode
 //=============================
 #define RED_DISPLAY_NICKNAME
-#define RED_DISPLAY_TIMER
+//#define RED_DISPLAY_TIMER
 //#define RED_DISPLAY_RC_THROTTLE
 //#define RED_DISPLAY_COMB_CURRENT
 #define RED_DISPLAY_LIPO_VOLTAGE
@@ -154,6 +154,10 @@ void setup(){
       OSD.print( clean );
   }
 
+  //set blinktime
+  OSD.setBlinkingTime(2); //0-3
+  OSD.setBlinkingDuty(1); //0-3
+
   Serial.begin(115200);
 }
 
@@ -217,8 +221,8 @@ uint8_t print_int16(int16_t p_int, char *str, uint8_t dec, uint8_t AlignLeft){
 
 void print_time(unsigned long time, char *time_str) {
     uint16_t seconds = time / 1000;
-    uint8_t mills = time % 1000;
-    uint8_t minutes = seconds / 60;
+    uint16_t mills = time % 1000;
+    uint16_t minutes = seconds / 60;
     if (seconds >= 60) {
       minutes = seconds/60;
     } else {
@@ -229,7 +233,7 @@ void print_time(unsigned long time, char *time_str) {
     static char time_mil[6];
     uint8_t i = 0;
     uint8_t time_pos = print_int16(minutes, time_str,0,1);
-    time_str[time_pos++] = 'm';
+    time_str[time_pos++] = ':';
 
     uint8_t sec_pos = print_int16(seconds, time_sec,0,1);
     for (i=0; i<sec_pos; i++)
@@ -753,6 +757,9 @@ void loop(){
       OSD.setCursor( 0, -1 );
       OSD.print( "bat:" );
       OSD.print( LipoVoltC );
+      //OSD.blink();
+      //OSD.print( LipoVoltC );
+      //OSD.noBlink();
       ESCmarginBot = 1;
     }
     
